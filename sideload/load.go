@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/snikch/api/ctx"
 )
 
 var (
@@ -15,14 +17,18 @@ var (
 // long as the struct type and callback handlers have been registered.
 // Note: A collection is expected to be of the same type, mixed type slices will
 // have incorrect data, or may even panic.
-func Load(data interface{}, required ...string) (map[string]map[string]interface{}, error) {
+func Load(context *ctx.Context, data interface{}, required []string) (map[string]map[string]interface{}, error) {
+	if required == nil {
+		return map[string]map[string]interface{}{}, nil
+	}
+
 	ids, err := idsFromData(data, required...)
 	if err != nil {
 		return nil, err
 	}
 
 	// At this point the ids map is ready for hydration.
-	entities, err := hydrateEntitiesFromMap(ids)
+	entities, err := hydrateEntitiesFromMap(context, ids)
 	return entities, nil
 }
 
@@ -31,6 +37,12 @@ func Load(data interface{}, required ...string) (map[string]map[string]interface
 func idsFromData(data interface{}, required ...string) (map[string]map[string]bool, error) {
 	value := reflect.ValueOf(data)
 	kind := value.Kind()
+	// Dereference any pointer.
+	if kind == reflect.Ptr {
+		value = value.Elem()
+		kind = value.Kind()
+
+	}
 	switch kind {
 	case reflect.Slice:
 		fallthrough
@@ -57,9 +69,13 @@ func idsFromData(data interface{}, required ...string) (map[string]map[string]bo
 			relatedEntityIDsFromStruct(value, fields, ids, requiredLookup)
 		}
 	} else {
-		var fields map[int]string
+		var fields map[string][][]int
 		for i := 0; i <= value.Len()-1; i++ {
 			sliceValue := value.Index(i)
+			// If this is a pointer, get the underlying element.
+			if sliceValue.Kind() == reflect.Ptr {
+				sliceValue = sliceValue.Elem()
+			}
 			if fields == nil {
 				typ := sliceValue.Type()
 				var ok bool
@@ -72,7 +88,6 @@ func idsFromData(data interface{}, required ...string) (map[string]map[string]bo
 			relatedEntityIDsFromStruct(sliceValue, fields, ids, requiredLookup)
 		}
 	}
-
 	return ids, nil
 }
 
@@ -85,42 +100,47 @@ type entityCollectionResult struct {
 
 // relatedEntityIDsFromStruct traverses a single struct instance for fields that
 // contain sideload ids. It adds those ids to the ids map if the ids are required.
-func relatedEntityIDsFromStruct(val reflect.Value, fields map[int]string, ids map[string]map[string]bool, required map[string]bool) {
-	for index, entityName := range fields {
+func relatedEntityIDsFromStruct(val reflect.Value, fields map[string][][]int, ids map[string]map[string]bool, required map[string]bool) {
+	for entityName, indexes := range fields {
 		// If we have required fields, and this entity isn't in it, skip this one.
 		if len(required) > 0 && !required[entityName] {
 			continue
 		}
 
-		// Get the field at the registered index.
-		field := val.Field(index)
+		for _, index := range indexes {
+			// Get the field at the registered index.
+			field := val.FieldByIndex(index)
+			if field.Kind() == reflect.Ptr {
+				field = field.Elem()
+			}
 
-		// Ensure it's a string type.
-		if field.Kind() != reflect.String {
-			continue
-		}
+			// Ensure it's a string type.
+			if field.Kind() != reflect.String {
+				continue
+			}
 
-		// Get the string value.
-		id := field.String()
-		if id == "" {
-			continue
-		}
-		// Ensure we have a map for this entity type.
-		if _, ok := ids[entityName]; !ok {
-			ids[entityName] = map[string]bool{}
-		}
+			// Get the string value.
+			id := field.String()
+			if id == "" {
+				continue
+			}
+			// Ensure we have a map for this entity type.
+			if _, ok := ids[entityName]; !ok {
+				ids[entityName] = map[string]bool{}
+			}
 
-		// Add the id.
-		ids[entityName][id] = true
+			// Add the id.
+			ids[entityName][id] = true
+		}
 	}
 }
 
 // hydrateEntitiesFromMap will take an entity ids map, and return the results
 // for each of the entity types and their ids. This requires a handler for the
 // entity types to have been registered previously.
-func hydrateEntitiesFromMap(ids map[string]map[string]bool) (map[string]map[string]interface{}, error) {
+func hydrateEntitiesFromMap(context *ctx.Context, ids map[string]map[string]bool) (map[string]map[string]interface{}, error) {
 	if len(ids) == 0 {
-		return nil, nil
+		return map[string]map[string]interface{}{}, nil
 	}
 
 	entities := map[string]map[string]interface{}{}
@@ -134,7 +154,7 @@ func hydrateEntitiesFromMap(ids map[string]map[string]bool) (map[string]map[stri
 			i++
 		}
 		// Go get the entity collection
-		go singleEntityCollection(resultChan, name, idSlice)
+		go singleEntityCollection(context, resultChan, name, idSlice)
 	}
 
 	var firstErr error
@@ -156,7 +176,7 @@ func hydrateEntitiesFromMap(ids map[string]map[string]bool) (map[string]map[stri
 }
 
 // singleEntityCollection retrieves the results from a single entity handler.
-func singleEntityCollection(resultChan chan<- entityCollectionResult, name string, ids []string) {
+func singleEntityCollection(context *ctx.Context, resultChan chan<- entityCollectionResult, name string, ids []string) {
 	// Create a result to send back on the channel
 	result := entityCollectionResult{
 		name: name,
@@ -172,6 +192,6 @@ func singleEntityCollection(resultChan chan<- entityCollectionResult, name strin
 	}
 
 	// Run the handler with the supplied ids, and send it back on the channel.
-	result.results, result.err = handler(ids)
+	result.results, result.err = handler(context, ids)
 	resultChan <- result
 }
