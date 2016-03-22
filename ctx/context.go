@@ -22,8 +22,12 @@ func NewContext() *Context {
 
 func (context *Context) Set(key, value interface{}) {
 	context.Lock()
-	context.data[key] = value
+	context.SetUnsafe(key, value)
 	context.Unlock()
+}
+
+func (context *Context) SetUnsafe(key, value interface{}) {
+	context.data[key] = value
 }
 
 func (context *Context) Get(key interface{}) interface{} {
@@ -33,7 +37,12 @@ func (context *Context) Get(key interface{}) interface{} {
 
 func (context *Context) GetOk(key interface{}) (interface{}, bool) {
 	context.Lock()
-	value, ok := context.data[key]
+	value, ok := context.GetOkUnsafe(key)
 	context.Unlock()
+	return value, ok
+}
+
+func (context *Context) GetOkUnsafe(key interface{}) (interface{}, bool) {
+	value, ok := context.data[key]
 	return value, ok
 }

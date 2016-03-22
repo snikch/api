@@ -50,3 +50,8 @@ reflect.DeepEqual(entities, map[string]map[string]interface{}{
   }
 })
 ```
+
+# TODO
+
+- [x] Add a mechanism to manually add pre-sideloaded entities to the payload via the context.
+- [ ] Ensure pre-loaded entities aren't reloaded as part of a separate 'load' event.

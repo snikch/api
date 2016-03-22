@@ -19,7 +19,9 @@ var (
 // have incorrect data, or may even panic.
 func Load(context *ctx.Context, data interface{}, required []string) (map[string]map[string]interface{}, error) {
 	if required == nil {
-		return map[string]map[string]interface{}{}, nil
+		context.Lock()
+		defer context.Unlock()
+		return preloadedEntities(context), nil
 	}
 
 	ids, err := idsFromData(data, required...)
@@ -139,11 +141,13 @@ func relatedEntityIDsFromStruct(val reflect.Value, fields map[string][][]int, id
 // for each of the entity types and their ids. This requires a handler for the
 // entity types to have been registered previously.
 func hydrateEntitiesFromMap(context *ctx.Context, ids map[string]map[string]bool) (map[string]map[string]interface{}, error) {
+	context.Lock()
+	entities := preloadedEntities(context)
+	context.Unlock()
 	if len(ids) == 0 {
-		return map[string]map[string]interface{}{}, nil
+		return entities, nil
 	}
 
-	entities := map[string]map[string]interface{}{}
 	resultChan := make(chan entityCollectionResult)
 	for name, idMap := range ids {
 		// Turn the map of ids into a slice.
@@ -170,7 +174,14 @@ func hydrateEntitiesFromMap(context *ctx.Context, ids map[string]map[string]bool
 			continue
 		}
 		// Results get assigned back to the entities being returned.
-		entities[result.name] = result.results
+		if existingEntities, ok := entities[result.name]; ok {
+			for key, value := range result.results {
+				existingEntities[key] = value
+			}
+			entities[result.name] = existingEntities
+		} else {
+			entities[result.name] = result.results
+		}
 	}
 	return entities, firstErr
 }

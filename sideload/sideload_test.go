@@ -190,7 +190,7 @@ func TestIDsFromPointerStructSlice(t *testing.T) {
 
 func TestHydrateEntitiesFromMapEmptyMap(t *testing.T) {
 	resetRegistry()
-	entities, err := hydrateEntitiesFromMap(nil, map[string]map[string]bool{})
+	entities, err := hydrateEntitiesFromMap(ctx.NewContext(), map[string]map[string]bool{})
 	if err != nil {
 		t.Errorf("Expected no error: %s", err)
 	}
@@ -202,7 +202,7 @@ func TestHydrateEntitiesFromMapEmptyMap(t *testing.T) {
 // No handler
 func TestHydrateEntitiesFromMapNoHandler(t *testing.T) {
 	resetRegistry()
-	_, err := hydrateEntitiesFromMap(nil, map[string]map[string]bool{
+	_, err := hydrateEntitiesFromMap(ctx.NewContext(), map[string]map[string]bool{
 		"users": {"u1": true},
 	})
 	if err == nil {
@@ -239,7 +239,7 @@ func TestHydrateEntitiesFromMap(t *testing.T) {
 			"p2": p2,
 		}, nil
 	})
-	entities, err := hydrateEntitiesFromMap(nil, map[string]map[string]bool{
+	entities, err := hydrateEntitiesFromMap(ctx.NewContext(), map[string]map[string]bool{
 		"users":    {"u1": true, "u2": true},
 		"products": {"p1": true, "p2": true},
 	})
@@ -265,7 +265,7 @@ func TestHydrateEntitiesFromMapOneFailure(t *testing.T) {
 			"p2": p2,
 		}, nil
 	})
-	_, err := hydrateEntitiesFromMap(nil, map[string]map[string]bool{
+	_, err := hydrateEntitiesFromMap(ctx.NewContext(), map[string]map[string]bool{
 		"users":    {"u1": true, "u2": true},
 		"products": {"p1": true, "p2": true},
 	})
@@ -282,11 +282,45 @@ func TestHydrateEntitiesFromMapMultipleFailures(t *testing.T) {
 	RegisterEntityHandler("products", func(_ *ctx.Context, ids []string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("Failure")
 	})
-	_, err := hydrateEntitiesFromMap(nil, map[string]map[string]bool{
+	_, err := hydrateEntitiesFromMap(ctx.NewContext(), map[string]map[string]bool{
 		"users":    {"u1": true, "u2": true},
 		"products": {"p1": true, "p2": true},
 	})
 	if err == nil {
 		t.Errorf("Expected an error")
+	}
+}
+
+func TestHydrateEntitiesWithPreloaded(t *testing.T) {
+	resetRegistry()
+	context := ctx.NewContext()
+	Preload(context, "users", map[string]interface{}{
+		"u2": u2,
+	})
+	Preload(context, "products", map[string]interface{}{
+		"p2": p2,
+	})
+	RegisterEntityHandler("users", func(_ *ctx.Context, ids []string) (map[string]interface{}, error) {
+		return map[string]interface{}{
+			"u1": u1,
+		}, nil
+	})
+	RegisterEntityHandler("products", func(_ *ctx.Context, ids []string) (map[string]interface{}, error) {
+		return map[string]interface{}{
+			"p1": p1,
+		}, nil
+	})
+	entities, err := hydrateEntitiesFromMap(context, map[string]map[string]bool{
+		"users":    {"u1": true},
+		"products": {"p1": true},
+	})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if !reflect.DeepEqual(entities, map[string]map[string]interface{}{
+		"users":    {"u1": u1, "u2": u2},
+		"products": {"p1": p1, "p2": p2},
+	}) {
+		t.Errorf("Unexpected map received: %s", entities)
 	}
 }
