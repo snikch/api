@@ -22,6 +22,16 @@ type Criteria struct {
 	State []string
 }
 
+// ShouldSideload returns true if the supplied name is in the sideload list.
+func (criteria Criteria) ShouldSideload(name string) bool {
+	for _, sideload := range criteria.Sideload {
+		if name == sideload {
+			return true
+		}
+	}
+	return false
+}
+
 // SideloadQueryKey is the name of the query parameter that determines which
 // entities should be sideloaded.
 var SideloadQueryKey = "include"
