@@ -12,6 +12,10 @@ type JSONRenderer struct {
 
 // Render marshals the supplied data to json.
 func (j JSONRenderer) Render(data interface{}) ([]byte, error) {
+	// A possibly unpopular decision, but if the data is nil, return nothing.
+	if data == nil {
+		return nil, nil
+	}
 	return json.MarshalIndent(data, "", "  ")
 }
 
