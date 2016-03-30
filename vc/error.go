@@ -1,6 +1,12 @@
 package vc
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/snikch/api/fail"
+	"github.com/snikch/api/log"
+)
 
 // StatusError defines an interface for an error that also includes a custom
 // http status code. Use this liberally to differentiate service errors from
@@ -38,25 +44,43 @@ type APIError struct {
 // RespondWithError will return an error response with the appropriate message,
 // and status codes set.
 func RespondWithError(w http.ResponseWriter, r *http.Request, err error) {
-	apiError := APIError{
+	isPublicError := false
+	errorResponse := APIError{
 		Error: err.Error(),
 	}
 	code := http.StatusInternalServerError
 	if statusErr, ok := err.(StatusError); ok {
+		// If we get a status code, this error can be considered a public error.
+		isPublicError = true
 		code = statusErr.StatusCode()
 	}
 
 	if descriptiveErr, ok := err.(DescriptiveError); ok {
-		apiError.Description = descriptiveErr.ErrorDescription()
+		errorResponse.Description = descriptiveErr.ErrorDescription()
 	}
 
 	if annotatedErr, ok := err.(AnnotatedError); ok {
-		apiError.Fields = annotatedErr.ErrorFields()
+		errorResponse.Fields = annotatedErr.ErrorFields()
 	}
 
 	w.WriteHeader(code)
 
-	body := DefaultRenderer.RenderError(apiError)
+	if !isPublicError {
+		err = fail.NewPrivate(err)
+		errorResponse.Error = err.Error()
+	}
+
+	body := DefaultRenderer.RenderError(errorResponse)
 	w.Write(body)
+
+	// Now log some information about the failure.
+	logData := map[string]interface{}{}
+	if annotatedErr, ok := err.(AnnotatedError); ok {
+		for key, value := range annotatedErr.ErrorFields() {
+			logData[key] = value
+		}
+	}
+
+	log.WithError(err).WithFields(logrus.Fields(logData)).Error("Returning error response")
 
 }

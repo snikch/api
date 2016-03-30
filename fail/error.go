@@ -39,3 +39,14 @@ func (err Err) WithField(key, value string) Err {
 	err.AdditionalFields[key] = value
 	return err
 }
+
+// WithFields is a chainable method that adds additional fields to the error.
+func (err Err) WithFields(fields map[string]string) Err {
+	if err.AdditionalFields == nil {
+		err.AdditionalFields = map[string]string{}
+	}
+	for key, value := range fields {
+		err.AdditionalFields[key] = value
+	}
+	return err
+}
