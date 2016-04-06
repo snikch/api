@@ -91,23 +91,6 @@ func (store *Store) Unlock() error {
 func (store *Store) unlockIndex(ch chan error, i int, key []byte) {
 	// Get the fields and nonce
 	fields := store.Items[i].LockableValues()
-	nonce := store.Items[i].Nonce()
 
-	for _, field := range fields {
-		// Ignore nil values.
-		if field == nil {
-			continue
-		}
-		// Decrypt the field
-		plainText, err := Decrypt([]byte(*field), nonce, key)
-		// If we fail, return the error and stop
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		// Replace the string at the pointer with the plainText.
-		*field = string(plainText)
-	}
-	ch <- nil
+	ch <- UnlockMany(key, fields)
 }

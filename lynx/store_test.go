@@ -34,14 +34,12 @@ func (t *testUnlocker) LockableValues() []*string {
 
 func TestUnlock(t *testing.T) {
 	l1 := &testUnlocker{
-		nonce:  nonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: nonce + payloadBase64Delimiter + string(cypherText),
+		field2: nonce + payloadBase64Delimiter + string(cypherText),
 	}
 	l2 := &testUnlocker{
-		nonce:  nonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: nonce + payloadBase64Delimiter + string(cypherText),
+		field2: nonce + payloadBase64Delimiter + string(cypherText),
 	}
 
 	context := ctx.NewContext()
@@ -67,14 +65,12 @@ func TestSingleError(t *testing.T) {
 	newNonce, _ := NewNonce()
 	// Supply one correct and one incorrect unlocker.
 	l1 := &testUnlocker{
-		nonce:  newNonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: newNonce + payloadBase64Delimiter + string(cypherText),
+		field2: newNonce + payloadBase64Delimiter + string(cypherText),
 	}
 	l2 := &testUnlocker{
-		nonce:  nonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: nonce + payloadBase64Delimiter + string(cypherText),
+		field2: nonce + payloadBase64Delimiter + string(cypherText),
 	}
 
 	context := ctx.NewContext()
@@ -91,14 +87,12 @@ func TestMultiError(t *testing.T) {
 	newNonce, _ := NewNonce()
 	// Both of these unlockers will fail since they have the wrong nonce.
 	l1 := &testUnlocker{
-		nonce:  newNonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: newNonce + payloadBase64Delimiter + string(cypherText),
+		field2: newNonce + payloadBase64Delimiter + string(cypherText),
 	}
 	l2 := &testUnlocker{
-		nonce:  newNonce,
-		field1: string(cypherText),
-		field2: string(cypherText),
+		field1: newNonce + payloadBase64Delimiter + string(cypherText),
+		field2: newNonce + payloadBase64Delimiter + string(cypherText),
 	}
 
 	context := ctx.NewContext()
