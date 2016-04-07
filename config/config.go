@@ -29,33 +29,65 @@ func init() {
 // Int provides a convenience wrapper for retrieving an integer from an env var.
 // If the env var is not set, the supplied default will be returned.
 func Int(name string, def int64) int64 {
+	return int(name, def, false)
+}
+
+// PrivateInt provides a convenience wrapper for retrieving an integer from an env var.
+// If the env var is not set, the supplied default will be returned. No values
+// are logged from this function.
+func PrivateInt(name string, def int64) int64 {
+	return int(name, def, true)
+}
+
+func int(name string, def int64, private bool) int64 {
 	strVal := os.Getenv(name)
+	l := log.WithField("name", name)
+
+	// No value? Use the default value provided.
 	if strVal == "" {
-		log.WithFields(logrus.Fields{
-			"name":    name,
-			"default": def,
-		}).Info("No ENV value, using default")
+		if !private {
+			l = l.WithField("default", def)
+		}
+		l.Info("No ENV value, using default")
 		return def
 	}
+
+	// Attempt conversion from string to an int.
 	intVal, err := strconv.Atoi(strVal)
 	if err != nil {
-		log.WithFields(logrus.Fields{
-			"name":    name,
-			"value":   strVal,
-			"default": def,
-		}).Error("Invalid value, using default")
+		if !private {
+			l = log.WithFields(logrus.Fields{
+				"value":   strVal,
+				"default": def,
+			})
+		}
+		l.Error("Invalid value, using default")
 		return def
 	}
-	log.WithFields(logrus.Fields{
-		"name":    name,
-		"default": def,
-		"value":   intVal,
-	}).Info("Using ENV value")
+
+	// If we're here, it's all good. Use the new value.
+	if !private {
+		l = log.WithFields(logrus.Fields{
+			"default": def,
+			"value":   intVal,
+		})
+	}
+	l.Info("Using ENV value")
 	return int64(intVal)
 }
 
 // String provides a wrapper around os.Getenv with an optional fallback value.
 func String(parts ...string) string {
+	return str(false, parts...)
+}
+
+// PrivateString provides a wrapper around os.Getenv with an optional fallback
+// value. No values are logged from this function.
+func PrivateString(parts ...string) string {
+	return str(true, parts...)
+}
+
+func str(private bool, parts ...string) string {
 	if len(parts) == 0 {
 		return ""
 	}
@@ -65,18 +97,23 @@ func String(parts ...string) string {
 		def = parts[1]
 	}
 
+	l := log.WithField("name", name)
+
 	val := os.Getenv(name)
 	if val == "" {
-		log.WithFields(logrus.Fields{
-			"name":    name,
-			"default": def,
-		}).Info("No ENV value, using default")
+		if !private {
+			l = l.WithField("default", def)
+		}
+		l.Info("No ENV value, using default")
 		return def
 	}
-	log.WithFields(logrus.Fields{
-		"name":    name,
-		"default": def,
-		"value":   val,
-	}).Info("Using ENV value")
+
+	if !private {
+		l = l.WithFields(logrus.Fields{
+			"default": def,
+			"value":   val,
+		})
+	}
+	l.Info("Using ENV value")
 	return val
 }
