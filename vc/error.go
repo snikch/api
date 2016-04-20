@@ -32,6 +32,12 @@ type AnnotatedError interface {
 	ErrorFields() map[string]string
 }
 
+// StructuredLogsError defines an interface for additional metadata for an error.
+// This metadata will be logged, but not output to the public error response.
+type StructuredLogsError interface {
+	LogFields() map[string]string
+}
+
 // APIError represents an API error response. This will be passed to a renderer
 // error method for conversion into an appropriate response.
 type APIError struct {
@@ -75,8 +81,8 @@ func RespondWithError(w http.ResponseWriter, r *http.Request, err error) {
 
 	// Now log some information about the failure.
 	logData := map[string]interface{}{}
-	if annotatedErr, ok := err.(AnnotatedError); ok {
-		for key, value := range annotatedErr.ErrorFields() {
+	if structuredLogErr, ok := err.(StructuredLogsError); ok {
+		for key, value := range structuredLogErr.LogFields() {
 			logData[key] = value
 		}
 	}

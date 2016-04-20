@@ -55,9 +55,9 @@ func (private Private) Error() string {
 	return private.PublicMessage
 }
 
-// ErrorFields implements vc.AnnotatedError and allows for the structured
+// LogFields implements vc.StructuredLogsError and allows for the structured
 // logging of the tracking id, and original private errors.
-func (private Private) ErrorFields() map[string]string {
+func (private Private) LogFields() map[string]string {
 	return map[string]string{
 		"id":             private.ID,
 		"original_error": private.OriginalErr.Error(),
