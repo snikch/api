@@ -33,6 +33,12 @@ func NewPrivate(err error) *Private {
 	}
 }
 
+// WithMessage is a chainable method to set the public message.
+func (private *Private) WithMessage(message string) *Private {
+	private.PublicMessage = message
+	return private
+}
+
 // WithStatusCode is a chainable method to set the status code.
 func (private *Private) WithStatusCode(code int) *Private {
 	private.Code = code
