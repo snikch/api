@@ -3,6 +3,7 @@ package fail
 import (
 	"crypto/sha1"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Private struct {
 	ID            string
 	PublicMessage string
 	OriginalErr   error
+	Code          int
 }
 
 // NewPrivate returns a private error wrapping the supplied error.
@@ -27,7 +29,19 @@ func NewPrivate(err error) *Private {
 		ID:            id,
 		PublicMessage: fmt.Sprintf("An unexpected error occurred [%s]", id),
 		OriginalErr:   err,
+		Code:          http.StatusInternalServerError,
 	}
+}
+
+// WithStatusCode is a chainable method to set the status code.
+func (private *Private) WithStatusCode(code int) *Private {
+	private.Code = code
+	return private
+}
+
+// StatusCode implements the StatusError interface.
+func (private Private) StatusCode() int {
+	return private.Code
 }
 
 // Error implements the error interface.
