@@ -27,7 +27,7 @@ func NewPrivate(err error) *Private {
 	id := fmt.Sprintf("%x", timeSHA[:])[:16]
 	return &Private{
 		ID:            id,
-		PublicMessage: fmt.Sprintf("An unexpected error occurred [%s]", id),
+		PublicMessage: "An unexpected error occurred",
 		OriginalErr:   err,
 		Code:          http.StatusInternalServerError,
 	}
@@ -52,7 +52,7 @@ func (private Private) StatusCode() int {
 
 // Error implements the error interface.
 func (private Private) Error() string {
-	return private.PublicMessage
+	return fmt.Sprintf("[%s] %s", private.ID, private.PublicMessage)
 }
 
 // LogFields implements vc.StructuredLogsError and allows for the structured
