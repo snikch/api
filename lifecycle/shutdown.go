@@ -8,10 +8,10 @@ import (
 	"syscall"
 )
 
-var shutdownRegistry = map[string]func(){}
+var shutdownRegistry = map[string]func() error{}
 
 // RegisterShutdownCallback will register a shutdown handler function.
-func RegisterShutdownCallback(name string, fn func()) {
+func RegisterShutdownCallback(name string, fn func() error) {
 	shutdownRegistry[name] = fn
 }
 
@@ -48,10 +48,14 @@ func WaitForShutdown() {
 	wg := sync.WaitGroup{}
 	for name, fn := range shutdownRegistry {
 		wg.Add(1)
-		go func(fn func(), name string) {
+		go func(fn func() error, name string) {
 			log.Printf("Running shutdown callback ‘%s’\n", name)
-			fn()
-			log.Printf("Finished shutdown callback ‘%s’\n", name)
+			err := fn()
+			if err != nil {
+				log.Printf("Failed shutdown callback ‘%s’: %s\n", name, err)
+			} else {
+				log.Printf("Finished shutdown callback ‘%s’\n", name)
+			}
 			wg.Done()
 		}(fn, name)
 	}

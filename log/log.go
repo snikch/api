@@ -57,5 +57,8 @@ func InitLoggly(key, applicationID string, tags ...string) {
 		tags...,
 	)
 	Logger.Hooks.Add(hook)
-	lifecycle.RegisterShutdownCallback("loggly", hook.Flush)
+	lifecycle.RegisterShutdownCallback("loggly", func() error {
+		hook.Flush()
+		return nil
+	})
 }
