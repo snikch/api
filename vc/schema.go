@@ -28,9 +28,9 @@ func MustSchemaFromFile(file string) *schema.Schema {
 	return MustSchema(string(contents))
 }
 
-// UnmarshalAndValidateSchema attempts to validate the body on the suppled
+// UnmarshalAndValidateRequestSchema attempts to validate the body on the suppled
 // context against the supplied schema, then unmarshal it into the supplied obj.
-func UnmarshalAndValidateSchema(context *ctx.Context, s *schema.Schema, obj interface{}) error {
+func UnmarshalAndValidateRequestSchema(context *ctx.Context, s *schema.Schema, obj interface{}) error {
 	// Check we can get a body.
 	if context.Request == nil || context.Request.Body == nil {
 		return errors.New("No request, or request body, available on context to unmarshal")
@@ -41,7 +41,12 @@ func UnmarshalAndValidateSchema(context *ctx.Context, s *schema.Schema, obj inte
 	if err != nil {
 		return err
 	}
+	return UnmarshalAndValidateSchema(body, s, obj)
+}
 
+// UnmarshalAndValidateSchema attempts to validate the body against the supplied
+// schema, then unmarshal it into the supplied obj.
+func UnmarshalAndValidateSchema(body []byte, s *schema.Schema, obj interface{}) error {
 	// Validate the body against the schema.
 	result, err := s.Validate(schema.NewStringLoader(string(body)))
 	if err != nil {
