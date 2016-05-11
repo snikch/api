@@ -71,14 +71,6 @@ func RespondWithError(w http.ResponseWriter, r *http.Request, err error) {
 
 	w.WriteHeader(code)
 
-	if !isPublicError {
-		err = fail.NewPrivate(err)
-		errorResponse.Error = err.Error()
-	}
-
-	body := DefaultRenderer.RenderError(errorResponse)
-	w.Write(body)
-
 	// Now log some information about the failure.
 	logData := map[string]interface{}{}
 	if structuredLogErr, ok := err.(StructuredLogsError); ok {
@@ -86,6 +78,15 @@ func RespondWithError(w http.ResponseWriter, r *http.Request, err error) {
 			logData[key] = value
 		}
 	}
+	logData["status"] = code
+
+	if !isPublicError {
+		err = fail.NewPrivate(err)
+		errorResponse.Error = err.Error()
+	}
+
+	body := DefaultRenderer.RenderError(errorResponse)
+	w.Write(body)
 
 	log.WithError(err).WithFields(logrus.Fields(logData)).Error("Returning error response")
 
