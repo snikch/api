@@ -81,6 +81,7 @@ func RespondWithError(w http.ResponseWriter, r *http.Request, err error) {
 	logData["status"] = code
 
 	if !isPublicError {
+		logData["original_error"] = err.Error()
 		err = fail.NewPrivate(err)
 		errorResponse.Error = err.Error()
 	}
