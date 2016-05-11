@@ -32,21 +32,19 @@ func (err Err) ErrorFields() map[string]string {
 }
 
 // WithField is a chainable method that adds additional fields to the error.
-func (err Err) WithField(key, value string) Err {
+func (err *Err) WithField(key, value string) {
 	if err.AdditionalFields == nil {
 		err.AdditionalFields = map[string]string{}
 	}
 	err.AdditionalFields[key] = value
-	return err
 }
 
 // WithFields is a chainable method that adds additional fields to the error.
-func (err Err) WithFields(fields map[string]string) Err {
+func (err *Err) WithFields(fields map[string]string) {
 	if err.AdditionalFields == nil {
 		err.AdditionalFields = map[string]string{}
 	}
 	for key, value := range fields {
 		err.AdditionalFields[key] = value
 	}
-	return err
 }
