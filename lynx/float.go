@@ -96,5 +96,8 @@ func (ef *EncryptedFloat) Scan(value interface{}) error {
 
 // Value implements value.Valuer to provide database values.
 func (ef EncryptedFloat) Value() (driver.Value, error) {
-	return ef.str, nil
+	if ef.str == nil {
+		return "", nil
+	}
+	return *ef.str, nil
 }
