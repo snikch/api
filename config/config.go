@@ -24,6 +24,7 @@ func init() {
 		_ = godotenv.Load(baseDir + ".env.default")
 	}
 
+	initSneakerSecrets()
 }
 
 // Int provides a convenience wrapper for retrieving an integer from an env var.
