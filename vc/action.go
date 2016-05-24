@@ -9,6 +9,9 @@ import (
 	"github.com/snikch/api/sideload"
 )
 
+// EmptyResponse is used to determine if a response should be empty.
+var EmptyResponse = &Response{}
+
 type contextKey int
 
 const (
@@ -84,6 +87,12 @@ func (p *ActionProcessor) HTTPHandler(handler ActionHandler) httprouter.Handle {
 		payload, code, err := handler.HandleAction(context)
 		if err != nil {
 			RespondWithError(w, r, err)
+			return
+		}
+
+		// If an empty response is required, return an empty response.
+		if payload == EmptyResponse {
+			RespondWithStatusCode(w, r, code)
 			return
 		}
 

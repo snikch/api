@@ -9,6 +9,11 @@ type Response struct {
 	Sideload *map[string]map[string]interface{} `json:"related,omitempty"`
 }
 
+// RespondWithStatusCode returns an empty response.
+func RespondWithStatusCode(w http.ResponseWriter, r *http.Request, code int) {
+	w.WriteHeader(code)
+}
+
 // RespondWithData will use the default renderer to render the response.
 func RespondWithData(w http.ResponseWriter, r *http.Request, data interface{}, code int) {
 	RespondWithRenderedData(DefaultRenderer, w, r, data, code)
