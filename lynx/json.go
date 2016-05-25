@@ -6,19 +6,19 @@ import (
 	"fmt"
 )
 
-// EncryptedJSON represents a json that is encryptable as a string.
+// EncryptedJSON represents json that is encryptable as a string.
 type EncryptedJSON struct {
 	str *string
 }
 
 // NewEncryptedJSON returns a newly initialized EncryptedJSON.
 func NewEncryptedJSON(j string) EncryptedJSON {
-	ej := EncryptedJSON{}
-	ej.str = &j
-	return ej
+	return EncryptedJSON{
+		str: &j,
+	}
 }
 
-// MarshalJSON returns []byte representation of string.
+// MarshalJSON returns a []byte representation of the string.
 func (j EncryptedJSON) MarshalJSON() ([]byte, error) {
 	if j.str == nil {
 		return []byte("null"), nil
@@ -26,7 +26,7 @@ func (j EncryptedJSON) MarshalJSON() ([]byte, error) {
 	return []byte(*j.str), nil
 }
 
-// UnmarshalJSON will unmarshall convert underlying []byte data to string.
+// UnmarshalJSON stores the supplied []byte data as a string.
 func (j *EncryptedJSON) UnmarshalJSON(data []byte) error {
 	if data == nil {
 		return errors.New("EncryptedJSON: UnmarshalJSON on nil data")
