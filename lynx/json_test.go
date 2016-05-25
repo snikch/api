@@ -19,6 +19,16 @@ func TestJSONUnmarshalEJ(t *testing.T) {
 	}
 }
 
+func TestJSONUnmarshalJSONEJ(t *testing.T) {
+	ej := NewEncryptedJSON(``)
+	err := ej.UnmarshalJSON([]byte(nil))
+
+	if err == nil {
+		t.Error("Expected error: EncryptedJSON: UnmarshalJSON on nil data")
+		return
+	}
+}
+
 func TestJSONMarshalEJ(t *testing.T) {
 	ej := NewEncryptedJSON(`{"foo":"bar"}`)
 	m, err := json.Marshal(ej)
@@ -52,6 +62,7 @@ func TestScanEJ(t *testing.T) {
 	}{
 		{"string", `{"foo":"bar"}`, true, `{"foo":"bar"}`},
 		{"[]byte", []byte(`{"foo":"bar"}`), true, `{"foo":"bar"}`},
+		{"nil", nil, true, ""},
 	} {
 		ej := EncryptedJSON{}
 		err := ej.Scan(e.Value)
