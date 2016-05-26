@@ -60,7 +60,8 @@ func RegisterCriteriaTransformer(transformer func(*ctx.Context, *Criteria)) {
 }
 
 // HTTPHandler takes an ActionHandler and returns a http.Handler instance
-// that can be used.
+// that can be used. The type and action are used to determine the context in
+// several areas, such as transformers and metrics.
 func (p *ActionProcessor) HTTPHandler(typ, action string, handler ActionHandler) httprouter.Handle {
 	// Create a new timer for timing this handler.
 	timer := metrics.NewTimer()
