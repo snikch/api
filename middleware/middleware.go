@@ -29,6 +29,7 @@ func (m Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ResponseWriter makes a write aware http.ResponseWriter.
 type ResponseWriter struct {
+	StatusCode int
 	http.ResponseWriter
 	written bool
 }
@@ -51,5 +52,6 @@ func (w *ResponseWriter) Write(bytes []byte) (int, error) {
 // as written.
 func (w *ResponseWriter) WriteHeader(code int) {
 	w.written = true
+	w.StatusCode = code
 	w.ResponseWriter.WriteHeader(code)
 }
