@@ -25,6 +25,13 @@ const (
 // through to unlocking, and responding.
 type ActionProcessor struct {
 	SideloadEnabled bool
+	MetricsRegistry metrics.Registry
+}
+
+func NewActionProcessor() *ActionProcessor {
+	return &ActionProcessor{
+		MetricsRegistry: metrics.NewRegistry(),
+	}
 }
 
 // ActionHandler implementers are responsible for returning payload data for
@@ -65,11 +72,11 @@ func RegisterCriteriaTransformer(transformer func(*ctx.Context, *Criteria)) {
 func (p *ActionProcessor) HTTPHandler(typ, action string, handler ActionHandler) httprouter.Handle {
 	// Create a new timer for timing this handler.
 	timer := metrics.NewTimer()
-	metrics.DefaultRegistry.Register(typ+"-"+action, timer)
+	p.MetricsRegistry.Register(typ+"-"+action, timer)
 	sideloadTimer := metrics.NewTimer()
-	metrics.DefaultRegistry.Register(typ+"-"+action+"-sideload", sideloadTimer)
+	p.MetricsRegistry.Register(typ+"-"+action+"-sideload", sideloadTimer)
 	unlockTimer := metrics.NewTimer()
-	metrics.DefaultRegistry.Register(typ+"-"+action+"-unlock", unlockTimer)
+	p.MetricsRegistry.Register(typ+"-"+action+"-unlock", unlockTimer)
 
 	return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		// At the end of this function, add a time metric.
