@@ -71,7 +71,7 @@ func TestScan(t *testing.T) {
 		{"string", "12.50", true, 12.5},
 		{"[]byte", []byte("12.5"), true, 12.5},
 		{"float64", 12.50, true, 12.5},
-		{"nil", nil, false, 0.0},
+		{"nil", nil, true, 0},
 		{"int64", int64(300), true, 300},
 	} {
 		ef := EncryptedFloat{}
@@ -89,7 +89,7 @@ func TestScan(t *testing.T) {
 		}
 
 		f, err := ef.Float64()
-		if err != nil {
+		if err != nil && e.Type != "nil" {
 			t.Errorf("Failed to convert %s to float: %s", e.Type, err)
 			continue
 		}
@@ -106,20 +106,21 @@ func TestValue(t *testing.T) {
 		t.Errorf("Unexpected error getting driver.Value: %s", err)
 		return
 	}
-	var e *string
-	if !reflect.DeepEqual(e, v) {
+
+	if !reflect.DeepEqual(nil, v) {
 		t.Errorf("Unexpected driver.Value: %s", v)
 		return
 	}
+
 	ef.SetFloat(12.50)
 	v, err = ef.Value()
 	if err != nil {
 		t.Errorf("Unexpected error getting driver.Value: %s", err)
 		return
 	}
+
 	s := "12.5"
-	e = &s
-	if !reflect.DeepEqual(e, v) {
+	if !reflect.DeepEqual(s, v) {
 		t.Errorf("Unexpected driver.Value: %s", v)
 		return
 	}
