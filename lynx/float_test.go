@@ -88,6 +88,8 @@ func TestScan(t *testing.T) {
 			continue
 		}
 
+		// Checking the iteration type is not "nil" here
+		// as nil is a valid response if we're testing Scan() of nil
 		f, err := ef.Float64()
 		if err != nil && e.Type != "nil" {
 			t.Errorf("Failed to convert %s to float: %s", e.Type, err)
