@@ -50,7 +50,7 @@ func (ef *EncryptedFloat) UnmarshalJSON(raw []byte) error {
 // MarshalJSON marshals the current value into a json number.
 func (ef EncryptedFloat) MarshalJSON() ([]byte, error) {
 	if ef.str == nil {
-		return []byte("0.0"), nil
+		return []byte("null"), nil
 	}
 	// Convert to float if possible.
 	f, err := strconv.ParseFloat(*ef.str, 64)
@@ -88,6 +88,8 @@ func (ef *EncryptedFloat) Scan(value interface{}) error {
 		ef.str = &s
 	case string:
 		ef.str = &val
+	case nil:
+		ef.str = nil
 	default:
 		return fmt.Errorf("EncryptedFloat.Scan: invalid scan type %T", value)
 	}
@@ -97,7 +99,7 @@ func (ef *EncryptedFloat) Scan(value interface{}) error {
 // Value implements value.Valuer to provide database values.
 func (ef EncryptedFloat) Value() (driver.Value, error) {
 	if ef.str == nil {
-		return "", nil
+		return nil, nil
 	}
 	return *ef.str, nil
 }
