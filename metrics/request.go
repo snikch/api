@@ -62,10 +62,10 @@ func (c *MeterByStatus) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 	c.meters[w.StatusCode].Mark(1)
 }
 
-// TimedByStatus is an http.Handler that times responses by their HTTP status
+// TimeByStatus is an http.Handler that times responses by their HTTP status
 // code via go-metrics.
 // This code is ripped blatantly from tigertonic, and converted to meters.
-type TimedByStatus struct {
+type TimeByStatus struct {
 	sync.Mutex
 	timers   map[int]metrics.Timer
 	handler  http.Handler
@@ -73,18 +73,18 @@ type TimedByStatus struct {
 	registry metrics.Registry
 }
 
-// NewTimedByStatus returns an http.Handler that passes requests to an
+// TimedByStatus returns an http.Handler that passes requests to an
 // underlying http.Handler and then times the response by its HTTP status code
 // via go-metrics.
-func NewTimedByStatus(
+func TimedByStatus(
 	handler http.Handler,
 	name string,
 	registry metrics.Registry,
-) *TimedByStatus {
+) *TimeByStatus {
 	if nil == registry {
 		registry = metrics.DefaultRegistry
 	}
-	return &TimedByStatus{
+	return &TimeByStatus{
 		timers:   map[int]metrics.Timer{},
 		handler:  handler,
 		name:     name,
@@ -94,7 +94,7 @@ func NewTimedByStatus(
 
 // ServeHTTP passes the request to the underlying http.Handler and then times
 // the response by its HTTP status code via go-metrics.
-func (c *TimedByStatus) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
+func (c *TimeByStatus) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 	w := middleware.NewResponseWriter(w0)
 	// Mark the start time.
 	start := time.Now()
