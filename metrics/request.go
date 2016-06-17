@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rcrowley/go-metrics"
 	"github.com/snikch/api/middleware"
 )
 
