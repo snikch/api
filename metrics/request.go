@@ -48,14 +48,18 @@ func (c *MeterByStatus) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 	c.Lock()
 	_, ok := c.meters[w.StatusCode]
 	if !ok {
+		// Generate a new meter if required.
 		meter := metrics.NewMeter()
 		c.meters[w.StatusCode] = meter
-		if err := c.registry.Register(
+
+		// Gets an existing metric or creates and registers a new one.
+		m := c.registry.GetOrRegister(
 			fmt.Sprintf("meter-%s-%d", c.name, w.StatusCode),
 			meter,
-		); nil != err {
+		)
+		if _, ok := m.(error); ok {
 			c.Unlock()
-			panic(err)
+			panic(m)
 		}
 	}
 	c.Unlock()
@@ -106,12 +110,15 @@ func (c *TimeByStatus) ServeHTTP(w0 http.ResponseWriter, r *http.Request) {
 		// Generate a new timer if required.
 		timer := metrics.NewTimer()
 		c.timers[w.StatusCode] = timer
-		if err := c.registry.Register(
+
+		// Gets an existing metric or creates and registers a new one.
+		m := c.registry.GetOrRegister(
 			fmt.Sprintf("timer-%s-%d", c.name, w.StatusCode),
 			timer,
-		); nil != err {
+		)
+		if _, ok := m.(error); ok {
 			c.Unlock()
-			panic(err)
+			panic(m)
 		}
 	}
 	c.Unlock()
