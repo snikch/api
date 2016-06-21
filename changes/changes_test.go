@@ -17,6 +17,12 @@ type TestStruct struct {
 	FloatPtrField  *float64   `json:"float_ptr_field"`
 	BoolField      bool       `json:"bool_field"`
 	BoolPtrField   *bool      `json:"bool_ptr_field"`
+	ExcludedStruct struct {
+		ExcludedField string
+	} `diff:"exclude"`
+	IncludedStruct struct {
+		IncludedField string
+	} `diff:"include"`
 }
 
 var testDiffer = Differ{
@@ -58,6 +64,7 @@ func TestPlainStructDiff(t *testing.T) {
 		TimeField:      now,
 		TimePtrField:   &now,
 	}
+	old.IncludedStruct.IncludedField = foo
 	then := time.Now()
 	new := TestStruct{
 		StringField:    bar,
@@ -65,11 +72,13 @@ func TestPlainStructDiff(t *testing.T) {
 		TimeField:      then,
 		TimePtrField:   &then,
 	}
+	new.IncludedStruct.IncludedField = bar
+
 	diffs, err := testDiffer.Between(old, new)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if len(diffs) != 4 {
+	if len(diffs) != 5 {
 		t.Errorf("Unexpected diff count: %d, expected 4", len(diffs))
 	}
 	for _, expectedDiff := range []Diff{
@@ -77,6 +86,7 @@ func TestPlainStructDiff(t *testing.T) {
 		{"string_ptr_field", "foo", "bar"},
 		{"time_field", now, then},
 		{"time_ptr_field", now, then},
+		{"IncludedStruct.IncludedField", "foo", "bar"},
 	} {
 		resultDiff, ok := diffs[expectedDiff.Key]
 		if !ok {

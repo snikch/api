@@ -36,12 +36,12 @@ func (mapper *TagMapper) KeyIndexes(value reflect.Value) (map[string][]int, erro
 
 // registerValue will create an index lookup, save it for later use, and return it.
 func (mapper *TagMapper) registerValue(value reflect.Value) (map[string][]int, error) {
-	indexes := mapper.registerPart(map[string][]int{}, value, []int{})
+	indexes := mapper.registerPart("", map[string][]int{}, value, []int{})
 	mapper.types[value.Type()] = indexes
 	return indexes, nil
 }
 
-func (mapper *TagMapper) registerPart(indexes map[string][]int, val reflect.Value, runningIndex []int) map[string][]int {
+func (mapper *TagMapper) registerPart(prefix string, indexes map[string][]int, val reflect.Value, runningIndex []int) map[string][]int {
 	// Get the type of the instance supplied.
 	typ := val.Type()
 	for i := 0; i < typ.NumField(); i++ {
@@ -66,41 +66,45 @@ func (mapper *TagMapper) registerPart(indexes map[string][]int, val reflect.Valu
 		index[len(runningIndex)] = i
 		/**
 		 * Due to the complicity of differentiating between a straight up struct,
-		 * and an implementation of a type, we just look at the first level.
+		 * and an implementation of a type, we just look at the first level by default.
 		 * For example, how do we determine the difference between an embedded struct
 		 * and a stdlib struct such as `time.Time`. Chances are we want to compare
 		 * the `time.Time` vs the underlying values.
+		 * An optional tag can force recursion of a struct. FieldName string `diff:"include"`
 		 */
+		diffTag := field.Tag.Get("diff")
+		if diffTag == "exclude" {
+			continue
+		}
 
-		// // If this is a struct, we can go deeper.
-		// if fieldType.Kind() == reflect.Struct {
-		// 	// IsValid is true if it's not the zero value and CanInterface is true
-		// 	// if it's an exported field.
-		// 	if !value.IsValid() || !value.CanInterface() {
-		// 		continue
-		// 	}
-		// 	// If this is a struct, recurse down the chain with the interface.
-		// 	indexes = mapper.registerPart(indexes, reflect.ValueOf(value.Interface()), index)
-		// 	continue
-		// }
-		// switch i := reflect.Indirect(value).Interface().(type) {
-		// case string, *string, time.Time, *time.Time, int, *int, float64, *float64, bool, *bool:
-		// Determine the name by trying tags, then just using the field name.
-		// fmt.Println("Worked on", i)
-		var name string
+		// Generate a name for this field, which can be set via a tag.
+		var tagName string
 		for _, tag := range mapper.tags {
-			name = field.Tag.Get(tag)
-			if name != "" {
+			tagName = field.Tag.Get(tag)
+			if tagName != "" {
 				break
 			}
 		}
-		if name == "" {
-			name = field.Name
+
+		var name string
+		if tagName != "" {
+			name = prefix + tagName
+		} else {
+			name = prefix + field.Name
+		}
+
+		// If this is a struct, we can go deeper - but only if it tells us to.
+		if fieldType.Kind() == reflect.Struct && diffTag == "include" {
+			// IsValid is true if it's not the zero value and CanInterface is true
+			// if it's an exported field.
+			if !value.IsValid() || !value.CanInterface() {
+				continue
+			}
+			// If this is a struct, recurse down the chain with the interface.
+			indexes = mapper.registerPart(name+".", indexes, reflect.ValueOf(value.Interface()), index)
+			continue
 		}
 		indexes[name] = index
-		// default:
-		// 	fmt.Println("Failed on", i)
-		// }
 	}
 	return indexes
 }
