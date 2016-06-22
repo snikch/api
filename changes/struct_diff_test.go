@@ -29,7 +29,7 @@ var testDiffer = Differ{
 	KeyMapper: NewTagMapper("db", "json"),
 }
 
-func TestNilValues(t *testing.T) {
+func TestStructNilValues(t *testing.T) {
 	s := struct{}{}
 	_, err := testDiffer.Between(nil, s)
 	if err == nil {
@@ -45,7 +45,7 @@ func TestNilValues(t *testing.T) {
 	}
 }
 
-func TestMismatchingTypes(t *testing.T) {
+func TestStructMismatchingTypes(t *testing.T) {
 	old := struct{}{}
 	new := TestStruct{}
 	_, err := testDiffer.Between(old, new)
@@ -54,7 +54,7 @@ func TestMismatchingTypes(t *testing.T) {
 	}
 }
 
-func TestPlainStructDiff(t *testing.T) {
+func TestStructPlainDiff(t *testing.T) {
 	foo := "foo"
 	bar := "bar"
 	now := time.Now()
@@ -104,7 +104,7 @@ func TestPlainStructDiff(t *testing.T) {
 	}
 }
 
-func TestTimePointerVariations(t *testing.T) {
+func TestStructTimePointerVariations(t *testing.T) {
 	foo := time.Now()
 	old := TestStruct{}
 	new := TestStruct{}
@@ -174,7 +174,7 @@ func TestTimePointerVariations(t *testing.T) {
 	}
 }
 
-func TestStringPointerVariations(t *testing.T) {
+func TestStructStringPointerVariations(t *testing.T) {
 	foo := "foo"
 	old := TestStruct{}
 	new := TestStruct{}
@@ -228,7 +228,7 @@ func TestStringPointerVariations(t *testing.T) {
 	}
 }
 
-func TestIntPointerVariations(t *testing.T) {
+func TestStructIntPointerVariations(t *testing.T) {
 	foo := 1337
 	old := TestStruct{}
 	new := TestStruct{}
@@ -282,7 +282,7 @@ func TestIntPointerVariations(t *testing.T) {
 	}
 }
 
-func TestFloatPointerVariations(t *testing.T) {
+func TestStructFloatPointerVariations(t *testing.T) {
 	foo := 133.7
 	old := TestStruct{}
 	new := TestStruct{}
@@ -336,7 +336,7 @@ func TestFloatPointerVariations(t *testing.T) {
 	}
 }
 
-func TestBoolPointerVariations(t *testing.T) {
+func TestStructBoolPointerVariations(t *testing.T) {
 	foo := false
 	old := TestStruct{}
 	new := TestStruct{}
@@ -390,7 +390,7 @@ func TestBoolPointerVariations(t *testing.T) {
 	}
 }
 
-func TestPtrStructDiff(t *testing.T) {
+func TestStructPtrStructDiff(t *testing.T) {
 	old := TestStruct{
 		StringField: "foo",
 	}
