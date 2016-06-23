@@ -58,7 +58,7 @@ func TestTagMapping(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
-	if !reflect.DeepEqual(result, expected) {
+	if !reflect.DeepEqual(result.Indexes, expected) {
 		t.Errorf("Unexpected Results\n%s", pretty.Compare(result, expected))
 
 	}

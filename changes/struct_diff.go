@@ -57,7 +57,8 @@ func (differ *Differ) Between(old, new interface{}) (DiffSet, error) {
 
 	// Loop over the keyIndexes and retrieve the values from both old and new.
 	diffs := DiffSet{}
-	for name, index := range keyIndexes {
+	for _, name := range keyIndexes.Keys {
+		index := keyIndexes.Indexes[name]
 		// Retrieve old and new values.
 		oldField := oldVal.FieldByIndex(index)
 		newField := newVal.FieldByIndex(index)
