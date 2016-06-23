@@ -6,27 +6,41 @@ import "reflect"
 type KeyMapper interface {
 	// KeyIndexes returns the key names, and their location, for comparing. This
 	// operation should be heavily cached to avoid runtime performance issues.
-	KeyIndexes(reflect.Value) (map[string][]int, error)
+	KeyIndexes(reflect.Value) (KeyIndexes, error)
 }
 
 // TagMapper is a KeyMapper implements that looks up tags in a sorted order for
 // key names, then falls back to the field name.
 type TagMapper struct {
 	tags  []string
-	types map[reflect.Type]map[string][]int
+	types map[reflect.Type]KeyIndexes
+}
+
+// KeyIndexes provides an ordered list of keys with their reflection indexes.
+type KeyIndexes struct {
+	Keys    []string
+	Indexes map[string][]int
+}
+
+// NewKeyIndexes initialises a new KeyIndexes.
+func NewKeyIndexes() KeyIndexes {
+	return KeyIndexes{
+		Keys:    []string{},
+		Indexes: map[string][]int{},
+	}
 }
 
 // NewTagMapper returns a new TagMapper instance.
 func NewTagMapper(tags ...string) *TagMapper {
 	return &TagMapper{
 		tags:  tags,
-		types: map[reflect.Type]map[string][]int{},
+		types: map[reflect.Type]KeyIndexes{},
 	}
 }
 
 // KeyIndexes implements the KeyMapper interface and returns the keys and their
 // locations in the value's type.
-func (mapper *TagMapper) KeyIndexes(value reflect.Value) (map[string][]int, error) {
+func (mapper *TagMapper) KeyIndexes(value reflect.Value) (KeyIndexes, error) {
 	typ := value.Type()
 	if indexes, ok := mapper.types[typ]; ok {
 		return indexes, nil
@@ -35,13 +49,13 @@ func (mapper *TagMapper) KeyIndexes(value reflect.Value) (map[string][]int, erro
 }
 
 // registerValue will create an index lookup, save it for later use, and return it.
-func (mapper *TagMapper) registerValue(value reflect.Value) (map[string][]int, error) {
-	indexes := mapper.registerPart("", map[string][]int{}, value, []int{})
+func (mapper *TagMapper) registerValue(value reflect.Value) (KeyIndexes, error) {
+	indexes := mapper.registerPart("", NewKeyIndexes(), value, []int{})
 	mapper.types[value.Type()] = indexes
 	return indexes, nil
 }
 
-func (mapper *TagMapper) registerPart(prefix string, indexes map[string][]int, val reflect.Value, runningIndex []int) map[string][]int {
+func (mapper *TagMapper) registerPart(prefix string, indexes KeyIndexes, val reflect.Value, runningIndex []int) KeyIndexes {
 	// Get the type of the instance supplied.
 	typ := val.Type()
 	for i := 0; i < typ.NumField(); i++ {
@@ -104,7 +118,8 @@ func (mapper *TagMapper) registerPart(prefix string, indexes map[string][]int, v
 			indexes = mapper.registerPart(name+".", indexes, reflect.ValueOf(value.Interface()), index)
 			continue
 		}
-		indexes[name] = index
+		indexes.Keys = append(indexes.Keys, name)
+		indexes.Indexes[name] = index
 	}
 	return indexes
 }
