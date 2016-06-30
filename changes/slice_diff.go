@@ -94,6 +94,5 @@ func sliceKeys(mapper KeyMapper, val reflect.Value) (map[string]interface{}, err
 		}
 		lookup[strings.Join(keyParts, ":")] = val.Interface()
 	}
-	fmt.Printf("Lookup %+v\n", lookup)
 	return lookup, nil
 }
