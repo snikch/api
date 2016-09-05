@@ -53,7 +53,7 @@ func (ef EncryptedFloat) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	// Convert to float if possible.
-	f, err := strconv.ParseFloat(*ef.Str, 64)
+	f, err := strconv.ParseFloat(*ef.StringValue, 64)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to convert encrypted float to float: %s", err)
 	}
@@ -85,7 +85,7 @@ func (ef *EncryptedFloat) Scan(value interface{}) error {
 		ef.StringValue = &s
 	case []byte:
 		s := string(val)
-		ef.Str = &s
+		ef.StringValue = &s
 	case string:
 		ef.StringValue = &val
 	case nil:
