@@ -30,6 +30,9 @@ type TestMappingStruct struct {
 		IncludedField string
 		NoTag         string
 	} `diff:"include"`
+	IncludedStructSingleField struct {
+		IncludedField string
+	} `diff:"include"`
 }
 
 func TestTagMapping(t *testing.T) {
@@ -53,6 +56,7 @@ func TestTagMapping(t *testing.T) {
 		"BoolPtr":                      {13},
 		"IncludedStruct.IncludedField": {15, 0},
 		"IncludedStruct.NoTag":         {15, 1},
+		"IncludedStructSingleField":    {16, 0},
 	}
 	result, err := mapper.KeyIndexes(val)
 	if err != nil {
