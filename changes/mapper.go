@@ -1,6 +1,9 @@
 package changes
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 // KeyMapper defines an interface for finding the key name for a given type field.
 type KeyMapper interface {
@@ -58,9 +61,11 @@ func (mapper *TagMapper) registerValue(value reflect.Value) (KeyIndexes, error) 
 func (mapper *TagMapper) registerPart(prefix string, indexes KeyIndexes, val reflect.Value, runningIndex []int) KeyIndexes {
 	// Get the type of the instance supplied.
 	typ := val.Type()
+
 	for i := 0; i < typ.NumField(); i++ {
 		// Loop over every field, and add the sideload entity if it exists.
 		field := typ.Field(i)
+
 		// Exclude unexported fields.
 		if field.PkgPath != "" {
 			continue
@@ -78,6 +83,7 @@ func (mapper *TagMapper) registerPart(prefix string, indexes KeyIndexes, val ref
 		index := make([]int, len(runningIndex)+1)
 		copy(index, runningIndex)
 		index[len(runningIndex)] = i
+
 		/**
 		 * Due to the complicity of differentiating between a straight up struct,
 		 * and an implementation of a type, we just look at the first level by default.
@@ -104,7 +110,14 @@ func (mapper *TagMapper) registerPart(prefix string, indexes KeyIndexes, val ref
 		if tagName != "" {
 			name = prefix + tagName
 		} else {
+			// If recursion of a struct append field name to given prefix.
 			name = prefix + field.Name
+
+			// If struct has single field, strip period from prefix and don't append
+			// inner field name.
+			if typ.NumField() == 1 {
+				name = strings.TrimSuffix(prefix, ".")
+			}
 		}
 
 		// If this is a struct, we can go deeper - but only if it tells us to.
@@ -114,6 +127,7 @@ func (mapper *TagMapper) registerPart(prefix string, indexes KeyIndexes, val ref
 			if !value.IsValid() || !value.CanInterface() {
 				continue
 			}
+
 			// If this is a struct, recurse down the chain with the interface.
 			indexes = mapper.registerPart(name+".", indexes, reflect.ValueOf(value.Interface()), index)
 			continue

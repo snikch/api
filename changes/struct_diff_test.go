@@ -22,6 +22,7 @@ type TestStruct struct {
 	} `diff:"exclude"`
 	IncludedStruct struct {
 		IncludedField string
+		NoTag         string
 	} `diff:"include"`
 }
 
