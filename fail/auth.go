@@ -24,7 +24,7 @@ func NewAuthError(code int, parts ...string) AuthenticationError {
 
 	// Map our custom auth error code.
 	internalErrCode := map[string]string{
-		"internal_error_code": strconv.Itoa(code),
+		"error_code": strconv.Itoa(code),
 	}
 
 	return AuthenticationError{
