@@ -3,6 +3,7 @@ package fail
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 // AuthenticationError represents a failure to authenticate.
@@ -21,11 +22,17 @@ func NewAuthError(code int, parts ...string) AuthenticationError {
 		description = parts[1]
 	}
 
+	// Map our custom auth error code.
+	internalErrCode := map[string]string{
+		"internal_error_code": strconv.Itoa(code),
+	}
+
 	return AuthenticationError{
 		Err: Err{
-			Code:          code,
-			OriginalError: fmt.Errorf(err),
-			Description:   description,
+			Code:             code,
+			OriginalError:    fmt.Errorf(err),
+			Description:      description,
+			AdditionalFields: internalErrCode,
 		},
 	}
 }
