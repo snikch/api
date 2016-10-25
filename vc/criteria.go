@@ -2,6 +2,7 @@ package vc
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/snikch/api/ctx"
@@ -36,16 +37,29 @@ func (criteria Criteria) ShouldSideload(name string) bool {
 // entities should be sideloaded.
 var SideloadQueryKey = "include"
 
+// SideloadQueryDelimeter is the delimeter used to split the sideload query
+// parameters when multiple entities should be sideloaded.
+var SideloadQueryDelimeter = ","
+
 // StateQueryKey is the name of the query paramtere that determines which
 // entity states should be returned.
 var StateQueryKey = "state"
 
 // RequestCriteria generates a criteria instance from the request.
 func RequestCriteria(r *http.Request) *Criteria {
+
+	// If sideloaded entities are passed separated by delimeter, split them into
+	// a slice.
+	sideloadEntities := r.URL.Query()[SideloadQueryKey]
+	if len(sideloadEntities) == 1 {
+		sideloadEntities = strings.Split(sideloadEntities[0], SideloadQueryDelimeter)
+	}
+
 	criteria := Criteria{
-		Sideload: r.URL.Query()[SideloadQueryKey],
+		Sideload: sideloadEntities,
 		State:    r.URL.Query()[StateQueryKey],
 	}
+
 	// Prevent overloading of the sideload and state criteria.
 	if len(criteria.Sideload) > 100 {
 		criteria.Sideload = nil
