@@ -30,8 +30,7 @@ func Load(context *ctx.Context, data interface{}, required []string) (map[string
 	}
 
 	// At this point the ids map is ready for hydration.
-	entities, err := hydrateEntitiesFromMap(context, ids)
-	return entities, nil
+	return hydrateEntitiesFromMap(context, ids)
 }
 
 // idsFromData takes a data interface and a list of required fields, and produces
