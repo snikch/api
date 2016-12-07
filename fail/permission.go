@@ -12,6 +12,8 @@ type PermissionsError struct {
 }
 
 // NewPermissionsError returns a new PermissionsError to wrap the supplied error.
+// The parts slice elements refer to the original error and a more detailed
+// description respectively.
 func NewPermissionsError(code int, parts ...string) PermissionsError {
 	var description, err string
 
