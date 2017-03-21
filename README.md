@@ -1,8 +1,8 @@
 # Go API Framework
 
-Note: This is not even Alpha software.
+Status: This is used in production for several apis and as such is considered stable, but open to api changes without warning.
 
-API View Controller Toolkit.
+API Toolkit.
 
 ## Ethos
 
