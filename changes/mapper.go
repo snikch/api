@@ -47,10 +47,10 @@ func NewTagMapper(tags ...string) *TagMapper {
 // locations in the value's type.
 func (mapper *TagMapper) KeyIndexes(value reflect.Value) (KeyIndexes, error) {
 	mapper.RLock()
-	defer mapper.RUnlock()
-
 	typ := value.Type()
-	if indexes, ok := mapper.types[typ]; ok {
+	indexes, ok := mapper.types[typ]
+	mapper.RUnlock()
+	if ok {
 		return indexes, nil
 	}
 	return mapper.registerValue(value)
