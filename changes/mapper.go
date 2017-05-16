@@ -46,6 +46,9 @@ func NewTagMapper(tags ...string) *TagMapper {
 // KeyIndexes implements the KeyMapper interface and returns the keys and their
 // locations in the value's type.
 func (mapper *TagMapper) KeyIndexes(value reflect.Value) (KeyIndexes, error) {
+	mapper.RLock()
+	defer mapper.RUnlock()
+
 	typ := value.Type()
 	if indexes, ok := mapper.types[typ]; ok {
 		return indexes, nil
