@@ -3,6 +3,7 @@ package changes
 import (
 	"reflect"
 	"strings"
+	"sync"
 )
 
 // KeyMapper defines an interface for finding the key name for a given type field.
@@ -17,6 +18,7 @@ type KeyMapper interface {
 type TagMapper struct {
 	tags  []string
 	types map[reflect.Type]KeyIndexes
+	sync.RWMutex
 }
 
 // KeyIndexes provides an ordered list of keys with their reflection indexes.
@@ -53,8 +55,10 @@ func (mapper *TagMapper) KeyIndexes(value reflect.Value) (KeyIndexes, error) {
 
 // registerValue will create an index lookup, save it for later use, and return it.
 func (mapper *TagMapper) registerValue(value reflect.Value) (KeyIndexes, error) {
+	mapper.Lock()
 	indexes := mapper.registerPart("", NewKeyIndexes(), value, []int{})
 	mapper.types[value.Type()] = indexes
+	mapper.Unlock()
 	return indexes, nil
 }
 
