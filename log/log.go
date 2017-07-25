@@ -3,8 +3,8 @@ package log
 import (
 	"os"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/sebest/logrusly"
+	"github.com/sirupsen/logrus"
 	"github.com/snikch/api/lifecycle"
 )
 
